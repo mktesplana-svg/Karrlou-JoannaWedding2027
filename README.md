@@ -20,7 +20,9 @@ Every time you push a change to the repo, Vercel redeploys automatically.
 
 ## Uploading to GitHub (two photo batches)
 
-GitHub's web uploader takes at most 100 files at a time, so the 153 photos are split into two folders:
+GitHub's web uploader takes at most 100 files at a time, so the 153 photos are split into two folders.
+The photos are resized for the web (1600px on the long side, about 100–350 KB each), so each folder is
+small enough for the web uploader (originals were up to 4 MB each, which made the upload fail):
 
 - `photos-1/`: 77 photos (`FB_…` up to `IMG_4950`)
 - `photos-2/`: 76 photos (`IMG_4951` and later)
