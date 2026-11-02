@@ -9,13 +9,49 @@ checks each guest's typed name against the baked-in guest list before letting th
 ## Deploy on Vercel (from GitHub)
 
 1. Create a new GitHub repository and upload the contents of this `github/` folder
-   (`index.html`, `og-image.png` and this `README.md`) to the repo root.
-   Keep `og-image.png` next to `index.html` because the Messenger preview uses it.
+   (`index.html`, `og-image.png`, the `photos/` folder and this `README.md`) to the repo root.
+   Keep `og-image.png` and `photos/` next to `index.html`. The Messenger preview and the
+   Our Journey gallery load from there.
 2. Go to https://vercel.com → **Add New… → Project** → import your repo.
 3. Framework Preset: **Other**. Leave Build Command empty and Output Directory as the root.
 4. Click **Deploy**. Vercel serves `index.html` at your domain.
 
 Every time you push a change to the repo, Vercel redeploys automatically.
+
+## Updating an existing repo (this release)
+
+The ZIP contains the full repo. To replace what's on GitHub:
+
+1. On github.com, open your repo → **Add file → Upload files**.
+2. Drag in `index.html`, `README.md` and `og-image.png`. Click **Commit changes**.
+3. Upload the photos: **Add file → Upload files**, drag the whole `photos` folder in, and commit.
+   GitHub's web uploader takes **at most 100 files per upload**. There are 153 photos, so do it
+   in two batches: drag the folder once, and if it stops at 100, upload the rest the same way
+   into `photos/`.
+4. Vercel redeploys automatically in about a minute. Check
+   `https://karrlou-and-joanna-wedding.vercel.app/photos/IMG_8125_edit.jpg` to confirm the photos are live.
+
+(Using GitHub Desktop instead? Copy the ZIP contents over your local repo folder, commit, push.)
+
+## Works on phone, tablet and computer
+
+- Every tab reflows from small phones (320px) up to wide desktops with no sideways scrolling.
+- Menu links and buttons have finger-sized tap areas, and the Wedding Pass card stacks on phones.
+
+## Guidelines tab: attire guide
+
+- A "Please don't wear white" banner, then three cards (Guests, Principal Sponsors, Entourage), each with
+  its attire illustration, instructions and named color swatches.
+- The illustrations are embedded in `index.html`, so no extra files are needed.
+- To edit the text or colors, search `index.html` for `FOR NINONG`, `SEMI-FORMAL ATTIRE` or a swatch name like `Dusty Blue`.
+
+## Our Journey photo gallery
+
+- A masonry collage of every photo sits below the love story (2 columns on phones, more on wider screens).
+- Tap any photo to enlarge it. Use the arrows, swipe or the ← → keys to move between photos, and tap outside, × or Esc to close.
+- Photos are the original files in `photos/`. They load as you scroll, so the page opens fast.
+- **Order / add / remove:** in `index.html` search for `static PHOTOS`. It's a list of file
+  numbers (newest first). Add a number to show a new `IMG_XXXX_edit.jpg` you've put in `photos/`.
 
 ## How the RSVP works
 
