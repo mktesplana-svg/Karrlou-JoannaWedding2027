@@ -122,7 +122,10 @@ On any row, tap **PASS**, then:
 
 ## Messenger / Facebook link preview
 
-The `<head>` contains Open Graph tags pointing to
+The preview tags (title, description, `og:image`) sit in the very top `<head>` of `index.html`, so Messenger and Facebook can read them without running the page.
+**If you re-export `index.html` later, check that line 5 says `<title>Passport to Marriage: Karrlou &amp; Joanna</title>` and not `Bundled Page`.**
+
+The tags point to
 `https://karrlou-and-joanna-wedding.vercel.app/og-image.png`. After deploying, paste the link into
 https://developers.facebook.com/tools/debug/ and click **Scrape Again** to refresh Messenger's
 cached preview. If your domain changes, update the URLs in those `og:` tags.
