@@ -9,7 +9,7 @@ checks each guest's typed name against the baked-in guest list before letting th
 ## Deploy on Vercel (from GitHub)
 
 1. Create a new GitHub repository and upload the contents of this `github/` folder
-   (`index.html`, `og-image.png`, the `photos-1/` and `photos-2/` folders and this `README.md`) to the repo root.
+   (`index.html`, `og-image.png`, the `photos-1/`, `photos-2/` and `music/` folders and this `README.md`) to the repo root.
    Keep `og-image.png` and both photo folders next to `index.html`. The Messenger preview and the
    Our Journey gallery load from there.
 2. Go to https://vercel.com → **Add New… → Project** → import your repo.
@@ -32,12 +32,20 @@ Steps on github.com → your repo:
 1. **Add file → Upload files**: drag in `index.html`, `README.md` and `og-image.png`. Click **Commit changes**.
 2. **Add file → Upload files**: drag the whole **`photos-1`** folder in. Commit.
 3. **Add file → Upload files**: drag the whole **`photos-2`** folder in. Commit.
-4. If your repo still has the old `photos/` folder, you can delete it (the site no longer uses it).
-5. Vercel redeploys automatically in about a minute. Check
+4. **Add file → Upload files**: drag the whole **`music`** folder in (contains `palagi.mp3`). Commit.
+5. If your repo still has the old `photos/` folder, you can delete it (the site no longer uses it).
+6. Vercel redeploys automatically in about a minute. Check
    `https://karrlou-and-joanna-wedding.vercel.app/photos-2/IMG_8125_edit.jpg` to confirm the photos are live.
 
 **Adding a new photo later:** name it `IMG_XXXX_edit.jpg`. If the number is 4951 or higher (e.g. `IMG_9001`) put it in `photos-2/`,
 otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`.
+
+## Background music
+
+- The record button under the countdown on the Departure tab plays **Palagi** (`music/palagi.mp3`). It fades in to 75% volume and loops.
+- The song keeps playing as guests switch tabs. Go back to Departure and tap the record again to pause.
+- Browsers don't allow music to start on its own, so guests need to tap the button.
+- To change the song, replace `music/palagi.mp3` with another MP3 that has the same file name.
 
 ## Works on phone, tablet and computer
 
