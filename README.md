@@ -9,8 +9,8 @@ checks each guest's typed name against the baked-in guest list before letting th
 ## Deploy on Vercel (from GitHub)
 
 1. Create a new GitHub repository and upload the contents of this `github/` folder
-   (`index.html`, `og-image.png`, the `photos/` folder and this `README.md`) to the repo root.
-   Keep `og-image.png` and `photos/` next to `index.html`. The Messenger preview and the
+   (`index.html`, `og-image.png`, the `photos-1/` and `photos-2/` folders and this `README.md`) to the repo root.
+   Keep `og-image.png` and both photo folders next to `index.html`. The Messenger preview and the
    Our Journey gallery load from there.
 2. Go to https://vercel.com → **Add New… → Project** → import your repo.
 3. Framework Preset: **Other**. Leave Build Command empty and Output Directory as the root.
@@ -18,20 +18,24 @@ checks each guest's typed name against the baked-in guest list before letting th
 
 Every time you push a change to the repo, Vercel redeploys automatically.
 
-## Updating an existing repo (this release)
+## Uploading to GitHub (two photo batches)
 
-The ZIP contains the full repo. To replace what's on GitHub:
+GitHub's web uploader takes at most 100 files at a time, so the 153 photos are split into two folders:
 
-1. On github.com, open your repo → **Add file → Upload files**.
-2. Drag in `index.html`, `README.md` and `og-image.png`. Click **Commit changes**.
-3. Upload the photos: **Add file → Upload files**, drag the whole `photos` folder in, and commit.
-   GitHub's web uploader takes **at most 100 files per upload**. There are 153 photos, so do it
-   in two batches: drag the folder once, and if it stops at 100, upload the rest the same way
-   into `photos/`.
-4. Vercel redeploys automatically in about a minute. Check
-   `https://karrlou-and-joanna-wedding.vercel.app/photos/IMG_8125_edit.jpg` to confirm the photos are live.
+- `photos-1/`: 77 photos (`FB_…` up to `IMG_4950`)
+- `photos-2/`: 76 photos (`IMG_4951` and later)
 
-(Using GitHub Desktop instead? Copy the ZIP contents over your local repo folder, commit, push.)
+Steps on github.com → your repo:
+
+1. **Add file → Upload files**: drag in `index.html`, `README.md` and `og-image.png`. Click **Commit changes**.
+2. **Add file → Upload files**: drag the whole **`photos-1`** folder in. Commit.
+3. **Add file → Upload files**: drag the whole **`photos-2`** folder in. Commit.
+4. If your repo still has the old `photos/` folder, you can delete it (the site no longer uses it).
+5. Vercel redeploys automatically in about a minute. Check
+   `https://karrlou-and-joanna-wedding.vercel.app/photos-2/IMG_8125_edit.jpg` to confirm the photos are live.
+
+**Adding a new photo later:** name it `IMG_XXXX_edit.jpg`. If the number is 4951 or higher (e.g. `IMG_9001`) put it in `photos-2/`,
+otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`.
 
 ## Works on phone, tablet and computer
 
@@ -49,9 +53,9 @@ The ZIP contains the full repo. To replace what's on GitHub:
 
 - A masonry collage of every photo sits below the love story (2 columns on phones, more on wider screens).
 - Tap any photo to enlarge it. Use the arrows, swipe or the ← → keys to move between photos, and tap outside, × or Esc to close.
-- Photos are the original files in `photos/`. They load as you scroll, so the page opens fast.
+- Photos are the original files in `photos-1/` and `photos-2/`. They load as you scroll, so the page opens fast.
 - **Order / add / remove:** in `index.html` search for `static PHOTOS`. It's a list of file
-  numbers (newest first). Add a number to show a new `IMG_XXXX_edit.jpg` you've put in `photos/`.
+  numbers (newest first). Add a number to show a new `IMG_XXXX_edit.jpg` you've put in `photos-1/` or `photos-2/` (see above).
 
 ## How the RSVP works
 
