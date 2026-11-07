@@ -83,8 +83,22 @@ otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`
 - **On the list + “No” →** still recorded, but marked as **not attending** (their name is not
   counted toward attendees).
 
-Submissions post **silently in the background to your Google Form** (which you link to a Google
-Sheet). Until you wire that up, the form runs in demo mode and just shows the success screen.
+### Live check-ins → Admin (automatic)
+
+Every check-in is saved on the server (`api/checkin.js`, stored in the private Vercel Blob store
+**wedding-checkins**, file `rsvp/checkins.json`). The Admin manifest reads it every 8 seconds while it is open,
+so a guest's answer appears there by itself: status turns **Confirmed** or **Regretfully declined**, the counts
+update, the row shows "CHECKED IN" with the time, and **PASS** fills in the email the guest typed.
+It works on every device you sign in to Admin on.
+
+- If a guest checks in again, their latest answer replaces the earlier one.
+- A guest's own check-in overrides the RSVP status from the guest list or from **Edit** on this device.
+- If saving fails, the guest sees "We couldn't save your check-in…" and can try again.
+- The Blob store must stay connected to this Vercel project (Vercel → Storage). Don't delete it, or the answers are lost.
+- `package.json` only exists so Vercel installs `@vercel/blob` for the check-in function.
+
+Optionally, submissions are **also** posted to your Google Form (which you link to a Google Sheet) once you
+wire it up below.
 
 ### Wire up the Google Form (→ Google Sheet)
 
@@ -144,6 +158,7 @@ Click the small **lock icon** in the footer (or open `yoursite/#admin`).
   (change `ADMIN_USER` / `ADMIN_PASS` in `index.html`).
 - Shows stat cards, All / Confirmed / Declined / Waiting / VVIP tabs, category filter, search, Print,
   and a **PASS** button per guest.
+- Guests' check-ins update the manifest live on every device (see "Live check-ins" above).
 - **Add / Edit / Remove** saves on that device only. To update everyone, edit the Google Sheet.
 - ⚠️ This is a static site: the login only hides the tab. The password and guest names can be seen
   in the page source, so don't put anything sensitive there.
