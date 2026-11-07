@@ -88,10 +88,14 @@ otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`
 Every check-in is saved on the server (`api/checkin.js`, stored in the private Vercel Blob store
 **wedding-checkins**, file `rsvp/checkins.json`). The Admin manifest reads it every 8 seconds while it is open,
 so a guest's answer appears there by itself: status turns **Confirmed** or **Regretfully declined**, the counts
-update, the row shows "CHECKED IN" with the time, and **PASS** fills in the email the guest typed.
+update, the row shows "CHECKED IN" with the time, the **Email Address** column shows the email the guest typed,
+and **PASS** fills it in for you.
 It works on every device you sign in to Admin on.
 
-- If a guest checks in again, their latest answer replaces the earlier one.
+- Email is asked only when the guest picks **Yes, I will gladly attend**. Picking **No** hides the email field.
+- Answers are final. If a guest checks in again (Yes or No), they see **Already Checked In** with their first
+  answer and are asked to contact the couple. Guests who confirmed can still download their pass there.
+- To let a guest answer again: Admin → **Edit** on their row → **Clear check-in**.
 - A guest's own check-in overrides the RSVP status from the guest list or from **Edit** on this device.
 - If saving fails, the guest sees "We couldn't save your check-in…" and can try again.
 - The Blob store must stay connected to this Vercel project (Vercel → Storage). Don't delete it, or the answers are lost.

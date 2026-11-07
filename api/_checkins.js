@@ -23,6 +23,7 @@ export async function readAll(pathname = DEFAULT_PATH) {
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // Save one guest's answer. Retries when someone else saved in between.
+// A guest who has already answered can't change it (status 409); the couple can clear it in Admin.
 export async function saveCheckin(entry, pathname = DEFAULT_PATH) {
   let lastErr;
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -30,14 +31,15 @@ export async function saveCheckin(entry, pathname = DEFAULT_PATH) {
       const { data, etag } = await readAll(pathname);
       const key = norm(entry.name);
       const prev = data[key];
-      if (!prev && Object.keys(data).length >= MAX_GUESTS) throw Object.assign(new Error('Guest list is full'), { status: 400 });
-      data[key] = Object.assign({}, entry, { first: prev ? prev.first || prev.at : entry.at });
+      if (prev) throw Object.assign(new Error('Already answered'), { status: 409, prev });
+      if (Object.keys(data).length >= MAX_GUESTS) throw Object.assign(new Error('Guest list is full'), { status: 400 });
+      data[key] = Object.assign({}, entry, { first: entry.at });
       const opts = { access: 'private', contentType: 'application/json', addRandomSuffix: false, cacheControlMaxAge: 60 };
       if (etag) { opts.allowOverwrite = true; opts.ifMatch = etag; }
       await put(pathname, JSON.stringify(data), opts);
       return data[key];
     } catch (e) {
-      if (e && e.status === 400) throw e;
+      if (e && (e.status === 400 || e.status === 409)) throw e;
       lastErr = e;
       await sleep(80 + Math.random() * 250 * (attempt + 1));
     }
@@ -45,16 +47,19 @@ export async function saveCheckin(entry, pathname = DEFAULT_PATH) {
   throw lastErr || new Error('Could not save');
 }
 
+// Remove one guest's answer (Admin "Clear check-in"). Returns true if something was removed.
 export async function removeKey(key, pathname = DEFAULT_PATH) {
+  let lastErr;
   for (let attempt = 0; attempt < 8; attempt++) {
     try {
       const { data, etag } = await readAll(pathname);
-      if (!etag || !(key in data)) return;
+      if (!etag || !(key in data)) return false;
       delete data[key];
       await put(pathname, JSON.stringify(data), { access: 'private', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true, ifMatch: etag, cacheControlMaxAge: 60 });
-      return;
-    } catch (_) { await sleep(80 + Math.random() * 250 * (attempt + 1)); }
+      return true;
+    } catch (e) { lastErr = e; await sleep(80 + Math.random() * 250 * (attempt + 1)); }
   }
+  throw lastErr || new Error('Could not remove');
 }
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
@@ -76,9 +81,24 @@ export function makeHandler(pathname = DEFAULT_PATH) {
         const email = clip(body && body.email, 200);
         if (!name || !norm(name)) return json({ ok: false, error: 'Missing name' }, 400);
         if (attend !== 'yes' && attend !== 'no') return json({ ok: false, error: 'Missing attendance' }, 400);
+        if (attend === 'yes' && !email) return json({ ok: false, error: 'Email required' }, 400);
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: 'Invalid email' }, 400);
-        const saved = await saveCheckin({ name, attend, email, typed: clip(body.typed, 200), at: new Date().toISOString() }, pathname);
-        return json({ ok: true, at: saved.at });
+        try {
+          const saved = await saveCheckin({ name, attend, email: attend === 'yes' ? email : '', typed: clip(body.typed, 200), at: new Date().toISOString() }, pathname);
+          return json({ ok: true, at: saved.at });
+        } catch (e) {
+          if (e && e.status === 409) return json({ ok: false, already: true, attend: e.prev.attend, at: e.prev.at }, 409);
+          throw e;
+        }
+      }
+      if (request.method === 'DELETE') {
+        if (request.headers.get('x-admin-key') !== adminKey) return json({ ok: false, error: 'Unauthorized' }, 401);
+        let body;
+        try { body = await request.json(); } catch (_) { return json({ ok: false, error: 'Bad request' }, 400); }
+        const key = norm(body && (body.key || body.name));
+        if (!key) return json({ ok: false, error: 'Missing name' }, 400);
+        const removed = await removeKey(key, pathname);
+        return json({ ok: true, removed });
       }
       if (request.method === 'GET') {
         if (request.headers.get('x-admin-key') !== adminKey) return json({ ok: false, error: 'Unauthorized' }, 401);
