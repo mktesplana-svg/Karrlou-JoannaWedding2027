@@ -6,6 +6,12 @@ Departure · Our Journey · Itinerary · Guidelines · The Crew · Check-In (RSV
 The Crew tab lists the full entourage, and the Check-In tab has an **embedded RSVP form** that
 checks each guest's typed name against the baked-in guest list before letting them confirm.
 
+
+> **File layout (Nov 2026):** the full site now lives in `app.html`. `index.html` is a tiny front page that holds the
+> link-preview tags (so Messenger/WhatsApp phones can read them quickly) and then loads `app.html`. Wherever this README
+> says to edit `index.html`, edit `app.html` instead, except the preview tags, which are in both files.
+> The preview picture is `og-image.jpg` (85 KB; Meta's apps skip preview images around 300 KB or more).
+
 ## Deploy on Vercel (from GitHub)
 
 1. Create a new GitHub repository and upload the contents of this `github/` folder
