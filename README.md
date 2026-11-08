@@ -83,6 +83,25 @@ otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`
 - **On the list + “No” →** still recorded, but marked as **not attending** (their name is not
   counted toward attendees).
 
+### Admin is the same on every device
+
+Guest-list changes made in Admin (**+ Add guest**, **Edit**, **Remove**, **VVIP**, **Discard all guest edits**) and
+**Mark all as seen** are saved online in `rsvp/admin.json` (`api/admin.js` + `api/_admin.js`). Every phone or
+computer that opens Admin shows the same list:
+
+- Opening Admin (or pressing **Refresh**) loads the latest copy. While Admin is open, changes from other devices
+  appear by themselves within seconds (at most about a minute).
+- The status line under the title shows **Same on all devices ✓** once a change is saved. Without a connection it
+  shows **Changes not saved yet, retrying**. The change stays on that device, even after a reload, and is sent as soon
+  as the connection is back.
+- Each device sends single changes, not the whole list, so two people editing at the same time don't erase each
+  other's work.
+- Guests' own devices also use these changes: guests added in Admin can check in, removed guests can't, renamed
+  guests match their new name, and VVIP marks put the plus-one note on their pass. They get only names and VVIP marks.
+  Answers, emails and invitation status stay private.
+- Edits a device had saved the old way (on that device only) are added to the shared list the first time Admin is
+  opened there.
+
 ### Live check-ins → Admin (automatic)
 
 Every check-in is saved on the server (`api/checkin.js` + `api/_checkins.js`) in the private Vercel Blob store
@@ -95,7 +114,7 @@ Every check-in is saved on the server (`api/checkin.js` + `api/_checkins.js`) in
 
 In Admin:
 - **Latest Check-Ins** (under the counts) lists online answers, newest first, with a red **NEW** badge, the email,
-  the time and a **PASS** button. **Mark all as seen** clears the badges (remembered on that device).
+  the time and a **PASS** button. **Mark all as seen** clears the badges on every device.
 - While Admin is open it checks for new answers every 5 seconds. A new one pops up at the bottom
   ("New check-in: … · Confirmed"), and the browser tab shows "(1) New check-in".
 - The **Confirmed** and **Regretfully declined** tabs list the newest check-ins first.
@@ -141,12 +160,9 @@ wire it up below.
 
 ### VVIP list
 
-In Admin, use **Edit → VVIP** to mark guests and the **VVIP** tab to see them. Those marks are
-saved on that device. To show the note on guests' own passes, tap **Copy VVIP list**
-and paste it over this line in `index.html`:
-```js
-static VVIP = [];
-```
+In Admin, use **Edit → VVIP** to mark guests and the **VVIP** tab to see them. Marks are saved online
+(see *Admin is the same on every device* below), and guests marked VVIP get the plus-one note on their own pass
+automatically. You can still hard-code names in the `static VVIP = [];` line in `app.html` if you want.
 
 ### Emailing a pass (Admin)
 
@@ -175,7 +191,7 @@ Click the small **lock icon** in the footer (or open `yoursite/#admin`).
 - Shows stat cards, All / Confirmed / Declined / Waiting / VVIP tabs, category filter, search, Print,
   and a **PASS** button per guest.
 - Guests' check-ins update the manifest live on every device (see "Live check-ins" above).
-- **Add / Edit / Remove** saves on that device only. To update everyone, edit the Google Sheet.
+- **Add / Edit / Remove**, VVIP marks and **Mark all as seen** are saved online and are the same on every device.
 - ⚠️ This is a static site: the login only hides the tab. The password and guest names can be seen
   in the page source, so don't put anything sensitive there.
 

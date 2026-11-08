@@ -15,6 +15,7 @@
 //     memory or the CDN cache (free), never an uncached read per poll.
 import { get, put, list, del } from '@vercel/blob';
 import { waitUntil } from '@vercel/functions';
+import { readAdmin, isVvip } from './_admin.js';
 
 export const INDEX_PATH = 'rsvp/checkins.json';
 export const GUEST_DIR = 'rsvp/guests/';
@@ -215,9 +216,9 @@ export function makeHandler() {
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: 'Invalid email' }, 400);
         try {
           const saved = await saveCheckin({ name, attend, email: attend === 'yes' ? email : '', typed: clip(body.typed, 200), at: new Date().toISOString() });
-          return json({ ok: true, at: saved.at });
+          return json({ ok: true, at: saved.at, vvip: await isVvip(name) });
         } catch (e) {
-          if (e && e.status === 409) return json({ ok: false, already: true, attend: e.prev.attend, at: e.prev.at }, 409);
+          if (e && e.status === 409) return json({ ok: false, already: true, attend: e.prev.attend, at: e.prev.at, vvip: await isVvip(name) }, 409);
           throw e;
         }
       }
@@ -233,8 +234,8 @@ export function makeHandler() {
       if (request.method === 'GET') {
         if (request.headers.get('x-admin-key') !== adminKey) return json({ ok: false, error: 'Unauthorized' }, 401);
         const doSync = new URL(request.url).searchParams.get('sync') === '1';
-        const checkins = await readForAdmin({ sync: doSync });
-        return json({ ok: true, checkins, now: new Date().toISOString(), synced: doSync });
+        const [checkins, admin] = await Promise.all([readForAdmin({ sync: doSync }), readAdmin({ fresh: doSync })]);
+        return json({ ok: true, checkins, admin, now: new Date().toISOString(), synced: doSync });
       }
       return json({ ok: false, error: 'Method not allowed' }, 405);
     } catch (e) {
