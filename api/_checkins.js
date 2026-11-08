@@ -40,6 +40,7 @@ export async function saveCheckin(entry, pathname = DEFAULT_PATH) {
       return data[key];
     } catch (e) {
       if (e && (e.status === 400 || e.status === 409)) throw e;
+      console.error('save attempt', attempt, e && e.name, e && e.message);
       lastErr = e;
       await sleep(80 + Math.random() * 250 * (attempt + 1));
     }
@@ -108,7 +109,7 @@ export function makeHandler(pathname = DEFAULT_PATH) {
       return json({ ok: false, error: 'Method not allowed' }, 405);
     } catch (e) {
       console.error('checkin error', e && e.message);
-      return json({ ok: false, error: 'Server error' }, e && e.status === 400 ? 400 : 500);
+      return json({ ok: false, error: 'Server error', detail: String((e && (e.name + ': ' + e.message)) || e).slice(0, 300) }, e && e.status === 400 ? 400 : 500);
     }
   };
 }
