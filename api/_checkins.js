@@ -14,6 +14,7 @@
 //     30 days when they run out. The Admin manifest polls every few seconds, so its reads come from this function's
 //     memory or the CDN cache (free), never an uncached read per poll.
 import { get, put, list, del } from '@vercel/blob';
+import { waitUntil } from '@vercel/functions';
 
 export const INDEX_PATH = 'rsvp/checkins.json';
 export const GUEST_DIR = 'rsvp/guests/';
@@ -87,10 +88,13 @@ function overlay(checkins) {
 // Save one guest's answer. Answers are final: a second check-in for the same guest gets status 409 with the first answer.
 export async function saveCheckin(entry) {
   const key = norm(entry.name);
-  // 1) Already answered? (fresh read of the combined list: covers answers saved before per-guest files existed)
-  const { checkins } = await readIndex(true);
-  if (checkins[key]) throw Object.assign(new Error('Already answered'), { status: 409, prev: checkins[key] });
-  if (Object.keys(checkins).length >= MAX_GUESTS) throw Object.assign(new Error('Guest list is full'), { status: 400 });
+  // 1) Already answered? Once the old answers have been moved into per-guest files (migrated), step 2 detects this by
+  //    itself. Before that, check the combined list (fresh read).
+  if (!mem.migrated) {
+    const { checkins } = await readIndex(true);
+    if (checkins[key]) throw Object.assign(new Error('Already answered'), { status: 409, prev: checkins[key] });
+    if (Object.keys(checkins).length >= MAX_GUESTS) throw Object.assign(new Error('Guest list is full'), { status: 400 });
+  }
   const rec = Object.assign({}, entry, { first: entry.at });
 
   // 2) Save the guest's own file. This is the step that must succeed.
@@ -113,17 +117,21 @@ export async function saveCheckin(entry) {
   if (lastErr) throw lastErr;
   mem.recent.set(key, { e: rec, t: Date.now() }); mem.removed.delete(key);
 
-  // 3) Add it to the combined list, then check it is still there (another guest saving at the same moment may have
-  //    written over it) and add it again if not. Best effort: if this still fails, sync() repairs the list.
-  try {
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const cur = await readIndex(true);
-      if (attempt > 0 && cur.checkins[key] && cur.checkins[key].at === rec.at) break;
-      cur.checkins[key] = rec;
-      await writeIndex(cur.checkins, cur.migrated);
-      await sleep(150 + Math.random() * 350);
-    }
-  } catch (e) { console.error('index update failed', e && e.message); }
+  // 3) The guest's answer is safe now, so reply right away and update the combined list in the background:
+  //    add it, check it is still there (another guest saving at the same moment may have written over it) and add it
+  //    again if not. Best effort: if this still fails, sync() repairs the list.
+  const update = (async () => {
+    try {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const cur = await readIndex(true);
+        if (attempt > 0 && cur.checkins[key] && cur.checkins[key].at === rec.at) break;
+        cur.checkins[key] = rec;
+        await writeIndex(cur.checkins, cur.migrated);
+        await sleep(150 + Math.random() * 350);
+      }
+    } catch (e) { console.error('index update failed', e && e.message); }
+  })();
+  try { waitUntil(update); } catch (_) { await update; }
   return rec;
 }
 
