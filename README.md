@@ -85,19 +85,31 @@ otherwise in `photos-1/`. Then add the number to `static PHOTOS` in `index.html`
 
 ### Live check-ins → Admin (automatic)
 
-Every check-in is saved on the server (`api/checkin.js`, stored in the private Vercel Blob store
-**wedding-checkins**, file `rsvp/checkins.json`). The Admin manifest reads it every 8 seconds while it is open,
-so a guest's answer appears there by itself: status turns **Confirmed** or **Regretfully declined**, the counts
-update, the row shows "CHECKED IN" with the time, the **Email Address** column shows the email the guest typed,
-and **PASS** fills it in for you.
-It works on every device you sign in to Admin on.
+Every check-in is saved on the server (`api/checkin.js` + `api/_checkins.js`) in the private Vercel Blob store
+**wedding-checkins**:
 
-- Email is asked only when the guest picks **Yes, I will gladly attend**. Picking **No** hides the email field.
-- Answers are final. If a guest checks in again (Yes or No), they see **Already Checked In** with their first
-  answer and are asked to contact the couple. Guests who confirmed can still download their pass there.
-- To let a guest answer again: Admin → **Edit** on their row → **Clear check-in**.
-- A guest's own check-in overrides the RSVP status from the guest list or from **Edit** on this device.
-- If saving fails, the guest sees "We couldn't save your check-in…" and can try again.
+- `rsvp/guests/<name>.json` holds one file per guest, written once. Saving is a single upload, so guests
+  answering at the same moment can't block each other. These files are the master copy.
+- `rsvp/checkins.json` is the combined list the Admin manifest reads. It is updated after each check-in and
+  rebuilt from the per-guest files whenever Admin opens, **Refresh** is pressed, or every 15 minutes.
+
+In Admin:
+- **Latest Check-Ins** (under the counts) lists online answers, newest first, with a red **NEW** badge, the email,
+  the time and a **PASS** button. **Mark all as seen** clears the badges (remembered on that device).
+- While Admin is open it checks for new answers every 5 seconds. A new one pops up at the bottom
+  ("New check-in: … · Confirmed"), and the browser tab shows "(1) New check-in".
+- The **Confirmed** and **Regretfully declined** tabs list the newest check-ins first.
+
+For guests:
+- Email is asked only for **Yes, I will gladly attend**.
+- Answers are final. A second check-in shows **Already Checked In** with the first answer.
+  To let a guest answer again: Admin → **Edit** on their row → **Clear check-in**.
+- Each save is tried up to 3 times. If the guest's signal is bad, the answer is kept on their phone and sent
+  automatically when the connection comes back (or the next time they open the site).
+
+Storage limits (Vercel Hobby, per month): 10,000 uncached reads and 2,000 uploads/lists. When either runs out, Blob
+stops working for 30 days. The Admin manifest's 5-second checks are served from the function's memory or the CDN
+cache, so they don't use these up. Each check-in uses about 3 uploads and 3 reads.
 - The Blob store must stay connected to this Vercel project (Vercel → Storage). Don't delete it, or the answers are lost.
 - `package.json` only exists so Vercel installs `@vercel/blob` for the check-in function.
 
